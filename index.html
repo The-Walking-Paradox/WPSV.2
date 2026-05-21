@@ -1888,23 +1888,45 @@ function sharedDrawMtn(g,W,H){
 function sharedDrawBrand(g,W,H,a=1){
   g.save();g.globalAlpha=a;
   const p=pip(W);
+  // Nepal flag pip
   g.fillStyle='#c9334a';g.fillRect(0,0,p,H*.5);
   g.fillStyle='#4a7fc0';g.fillRect(0,H*.5,p,H*.5);
-  const tf=g.createLinearGradient(0,0,0,H*.18);
+  // Top gradient to darken behind any header elements
+  const tf=g.createLinearGradient(0,0,0,H*.15);
   tf.addColorStop(0,'rgba(0,0,0,.65)');tf.addColorStop(1,'rgba(0,0,0,0)');
-  g.fillStyle=tf;g.fillRect(0,0,W,H*.18);
-  const bsz=Math.round(W*.032);
-  g.font='700 '+bsz+'px "DM Sans",sans-serif';
-  if('letterSpacing' in g)g.letterSpacing=Math.round(W*.004)+'px';
-  g.fillStyle='rgba(232,201,106,.97)';g.textAlign='center';
-  g.shadowColor='rgba(0,0,0,.8)';g.shadowBlur=W*.015;
-  g.fillText('THE WALKING PARADOX',W/2,H*.05+bsz);
-  g.shadowBlur=0;
-  if('letterSpacing' in g)g.letterSpacing='0px';
-  g.strokeStyle='rgba(232,201,106,.28)';g.lineWidth=1;
-  g.beginPath();g.moveTo(W*.28,H*.068);g.lineTo(W*.72,H*.068);g.stroke();
+  g.fillStyle=tf;g.fillRect(0,0,W,H*.15);
   g.restore();
 }
+
+// sharedDrawTopBrand — draws brand at TOP center (news tool only)
+// Positioned at 8% from top so Facebook/IG UI doesn't crop it
+function sharedDrawTopBrand(g,W,H,a=1){
+  g.save();g.globalAlpha=a;
+  sharedDrawBrand(g,W,H,a);
+  const bsz=Math.round(W*.026);
+  g.font='600 '+bsz+'px "Cinzel",serif';
+  if('letterSpacing' in g)g.letterSpacing=Math.round(W*.003)+'px';
+  g.fillStyle='rgba(232,201,106,.95)';g.textAlign='center';
+  g.shadowColor='rgba(0,0,0,.8)';g.shadowBlur=W*.015;
+  // H*.08 = 8% from top — below Facebook/IG UI overlay
+  g.fillText('THE WALKING PARADOX',W/2,H*.08+bsz);
+  g.shadowBlur=0;
+  if('letterSpacing' in g)g.letterSpacing='0px';
+  g.strokeStyle='rgba(232,201,106,.22)';g.lineWidth=1;
+  g.beginPath();g.moveTo(W*.3,H*.10);g.lineTo(W*.7,H*.10);g.stroke();
+  g.restore();
+}
+// sharedDrawWatermark — bottom-right subtle brand mark
+// Use this in all tools. Never top — FB/IG crops top 5-8%
+function sharedDrawWatermark(g,W,H){
+  const bsz=Math.round(W*.019);
+  g.font='500 '+bsz+'px "DM Sans",sans-serif';
+  if('letterSpacing' in g)g.letterSpacing='1.5px';
+  g.fillStyle='rgba(170,163,150,.6)';g.textAlign='right';
+  g.fillText('WALKING PARADOX',W*.965,H*.965);
+  if('letterSpacing' in g)g.letterSpacing='0px';
+}
+
 function sharedDrawBottom(g,W,H,a=1){
   g.save();g.globalAlpha=a;
   sharedDrawMtn(g,W,H);
@@ -3549,7 +3571,7 @@ function vRender(frame){
   // ── INTRO TITLE CARD ──
   if(frame<VT.INTRO){
     const p=ease(frame/VT.INTRO);
-    sharedDrawBrand(g,W,H,p);
+    sharedDrawTopBrand(g,W,H,p);
     g.save();g.globalAlpha=p;
     const tsz=Math.round(W*.062);
     g.font='900 '+tsz+'px "DM Sans",sans-serif';
@@ -3725,7 +3747,7 @@ function qRender(frame){
 
   // ── INTRO ──
   if(frame<60){
-    const p=ease(frame/60);sharedDrawBrand(g,W,H,p);
+    const p=ease(frame/60);sharedDrawTopBrand(g,W,H,p);
     g.save();g.globalAlpha=p;
     const tsz=Math.round(W*.062);
     g.font='900 '+tsz+'px "DM Sans",sans-serif';
@@ -5064,7 +5086,7 @@ const DYK = (() => {
       g.fillRect(W/2-W*.08, H*.38+dszBig*1.32, W*.16, Math.max(3,W*.004));
       g.restore();
       // Brand
-      sharedDrawBrand(g,W,H,p);
+      sharedDrawTopBrand(g,W,H,p);
       sharedDrawBottom(g,W,H,p);
       return;
     }
@@ -5958,12 +5980,7 @@ const PARADOX = (() => {
     // Bottom strip
     if(state.mood!=='minimal'){sharedDrawBottom(g,W,H,1);}
     else{
-      g.fillStyle='rgba(26,24,20,.06)';g.fillRect(0,H*.93,W,H*.07);
-      var bsz3=Math.round(W*.018);g.font='500 '+bsz3+'px "DM Sans",sans-serif';
-      if('letterSpacing' in g)g.letterSpacing='2px';
-      g.fillStyle='rgba(80,70,55,.5)';g.textAlign='center';
-      g.fillText('THE WALKING PARADOX',W/2,H*.965);
-      if('letterSpacing' in g)g.letterSpacing='0px';
+      g.fillStyle='rgba(26,24,20,.06)';g.fillRect(0,H*.93,W,H*.07);sharedDrawWatermark(g,W,H);
     }
   }
 
@@ -6384,7 +6401,10 @@ window.addEventListener('error', function(e){
 init();
 </script>
 
-<script>// ── EARLY ERROR HANDLER - must be first ──
+<script>(function(){
+'use strict';
+
+// ── EARLY ERROR HANDLER - must be first ──
 // Catches any startup errors before WP is initialized
 window.onerror = function(msg, src, line, col, err) {
   var errMsg = (msg || 'Script error') + (line ? ' (line ' + line + ')' : '');
@@ -6397,7 +6417,6 @@ window.onerror = function(msg, src, line, col, err) {
 
 
 
-'use strict';
 
 // ═══════════════════════════════════════════════════════════════
 //  WALKING PARADOX STUDIO - v2.0
@@ -6697,21 +6716,32 @@ function sharedDrawMtn(g,W,H){
 function sharedDrawBrand(g,W,H,a=1){
   g.save();g.globalAlpha=a;
   const p=pip(W);
+  // Nepal flag pip
   g.fillStyle='#c9334a';g.fillRect(0,0,p,H*.5);
   g.fillStyle='#4a7fc0';g.fillRect(0,H*.5,p,H*.5);
-  const tf=g.createLinearGradient(0,0,0,H*.18);
+  // Top gradient to darken behind any header elements
+  const tf=g.createLinearGradient(0,0,0,H*.15);
   tf.addColorStop(0,'rgba(0,0,0,.65)');tf.addColorStop(1,'rgba(0,0,0,0)');
-  g.fillStyle=tf;g.fillRect(0,0,W,H*.18);
-  const bsz=Math.round(W*.032);
-  g.font='700 '+bsz+'px "DM Sans",sans-serif';
-  if('letterSpacing' in g)g.letterSpacing=Math.round(W*.004)+'px';
-  g.fillStyle='rgba(232,201,106,.97)';g.textAlign='center';
+  g.fillStyle=tf;g.fillRect(0,0,W,H*.15);
+  g.restore();
+}
+
+// sharedDrawTopBrand — draws brand at TOP center (news tool only)
+// Positioned at 8% from top so Facebook/IG UI doesn't crop it
+function sharedDrawTopBrand(g,W,H,a=1){
+  g.save();g.globalAlpha=a;
+  sharedDrawBrand(g,W,H,a);
+  const bsz=Math.round(W*.026);
+  g.font='600 '+bsz+'px "Cinzel",serif';
+  if('letterSpacing' in g)g.letterSpacing=Math.round(W*.003)+'px';
+  g.fillStyle='rgba(232,201,106,.95)';g.textAlign='center';
   g.shadowColor='rgba(0,0,0,.8)';g.shadowBlur=W*.015;
-  g.fillText('THE WALKING PARADOX',W/2,H*.05+bsz);
+  // H*.08 = 8% from top — below Facebook/IG UI overlay
+  g.fillText('THE WALKING PARADOX',W/2,H*.08+bsz);
   g.shadowBlur=0;
   if('letterSpacing' in g)g.letterSpacing='0px';
-  g.strokeStyle='rgba(232,201,106,.28)';g.lineWidth=1;
-  g.beginPath();g.moveTo(W*.28,H*.068);g.lineTo(W*.72,H*.068);g.stroke();
+  g.strokeStyle='rgba(232,201,106,.22)';g.lineWidth=1;
+  g.beginPath();g.moveTo(W*.3,H*.10);g.lineTo(W*.7,H*.10);g.stroke();
   g.restore();
 }
 function sharedDrawBottom(g,W,H,a=1){
@@ -8300,7 +8330,7 @@ function vRender(frame){
   // ── INTRO TITLE CARD ──
   if(frame<VT.INTRO){
     const p=ease(frame/VT.INTRO);
-    sharedDrawBrand(g,W,H,p);
+    sharedDrawTopBrand(g,W,H,p);
     g.save();g.globalAlpha=p;
     const tsz=Math.round(W*.062);
     g.font='900 '+tsz+'px "DM Sans",sans-serif';
@@ -8476,7 +8506,7 @@ function qRender(frame){
 
   // ── INTRO ──
   if(frame<60){
-    const p=ease(frame/60);sharedDrawBrand(g,W,H,p);
+    const p=ease(frame/60);sharedDrawTopBrand(g,W,H,p);
     g.save();g.globalAlpha=p;
     const tsz=Math.round(W*.062);
     g.font='900 '+tsz+'px "DM Sans",sans-serif';
@@ -9366,7 +9396,7 @@ const DYK = (() => {
       g.fillRect(W/2-W*.08, H*.38+dszBig*1.32, W*.16, Math.max(3,W*.004));
       g.restore();
       // Brand
-      sharedDrawBrand(g,W,H,p);
+      sharedDrawTopBrand(g,W,H,p);
       sharedDrawBottom(g,W,H,p);
       return;
     }
@@ -10260,12 +10290,7 @@ const PARADOX = (() => {
     // Bottom strip
     if(state.mood!=='minimal'){sharedDrawBottom(g,W,H,1);}
     else{
-      g.fillStyle='rgba(26,24,20,.06)';g.fillRect(0,H*.93,W,H*.07);
-      var bsz3=Math.round(W*.018);g.font='500 '+bsz3+'px "DM Sans",sans-serif';
-      if('letterSpacing' in g)g.letterSpacing='2px';
-      g.fillStyle='rgba(80,70,55,.5)';g.textAlign='center';
-      g.fillText('THE WALKING PARADOX',W/2,H*.965);
-      if('letterSpacing' in g)g.letterSpacing='0px';
+      g.fillStyle='rgba(26,24,20,.06)';g.fillRect(0,H*.93,W,H*.07);sharedDrawWatermark(g,W,H);
     }
   }
 
@@ -10786,6 +10811,80 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 
 init();
-</script>
+
+
+// ── EXPOSE TO GLOBAL SCOPE FOR HTML ONCLICK HANDLERS ──
+if(typeof switchTool !== 'undefined') window.switchTool = switchTool;
+if(typeof nInit !== 'undefined') window.nInit = nInit;
+if(typeof vInit !== 'undefined') window.vInit = vInit;
+if(typeof qInit !== 'undefined') window.qInit = qInit;
+if(typeof iInit !== 'undefined') window.iInit = iInit;
+if(typeof nRender !== 'undefined') window.nRender = nRender;
+if(typeof vRender !== 'undefined') window.vRender = vRender;
+if(typeof qRender !== 'undefined') window.qRender = qRender;
+if(typeof iRender !== 'undefined') window.iRender = iRender;
+if(typeof nPreview !== 'undefined') window.nPreview = nPreview;
+if(typeof vPreview !== 'undefined') window.vPreview = vPreview;
+if(typeof qPreview !== 'undefined') window.qPreview = qPreview;
+if(typeof iPreview !== 'undefined') window.iPreview = iPreview;
+if(typeof nDownload !== 'undefined') window.nDownload = nDownload;
+if(typeof vExport !== 'undefined') window.vExport = vExport;
+if(typeof qExport !== 'undefined') window.qExport = qExport;
+if(typeof iExport !== 'undefined') window.iExport = iExport;
+if(typeof nSetStyle !== 'undefined') window.nSetStyle = nSetStyle;
+if(typeof nSetAlign !== 'undefined') window.nSetAlign = nSetAlign;
+if(typeof nSetLayout !== 'undefined') window.nSetLayout = nSetLayout;
+if(typeof nSetCatBilingual !== 'undefined') window.nSetCatBilingual = nSetCatBilingual;
+if(typeof nSetFmt !== 'undefined') window.nSetFmt = nSetFmt;
+if(typeof nSetDragLayer !== 'undefined') window.nSetDragLayer = nSetDragLayer;
+if(typeof nRemovePhoto !== 'undefined') window.nRemovePhoto = nRemovePhoto;
+if(typeof nRemoveFg !== 'undefined') window.nRemoveFg = nRemoveFg;
+if(typeof nSetHeadFont !== 'undefined') window.nSetHeadFont = nSetHeadFont;
+if(typeof nSetHeadWeight !== 'undefined') window.nSetHeadWeight = nSetHeadWeight;
+if(typeof nSetHeadColor !== 'undefined') window.nSetHeadColor = nSetHeadColor;
+if(typeof nSetBodyFont !== 'undefined') window.nSetBodyFont = nSetBodyFont;
+if(typeof nSetBodyColor !== 'undefined') window.nSetBodyColor = nSetBodyColor;
+if(typeof nSetFgPos !== 'undefined') window.nSetFgPos = nSetFgPos;
+if(typeof vSetFmt !== 'undefined') window.vSetFmt = vSetFmt;
+if(typeof vDeleteItem !== 'undefined') window.vDeleteItem = vDeleteItem;
+if(typeof vBuildItems !== 'undefined') window.vBuildItems = vBuildItems;
+if(typeof qSetFmt !== 'undefined') window.qSetFmt = qSetFmt;
+if(typeof qAddQ !== 'undefined') window.qAddQ = qAddQ;
+if(typeof qDelQ !== 'undefined') window.qDelQ = qDelQ;
+if(typeof qSetCorrect !== 'undefined') window.qSetCorrect = qSetCorrect;
+if(typeof qSetTimer !== 'undefined') window.qSetTimer = qSetTimer;
+if(typeof iSetFmt !== 'undefined') window.iSetFmt = iSetFmt;
+if(typeof iSetStyle !== 'undefined') window.iSetStyle = iSetStyle;
+if(typeof iSetDur !== 'undefined') window.iSetDur = iSetDur;
+if(typeof iSetIdentity !== 'undefined') window.iSetIdentity = iSetIdentity;
+if(typeof iPreview !== 'undefined') window.iPreview = iPreview;
+if(typeof iExport !== 'undefined') window.iExport = iExport;
+if(typeof iScreenRecord !== 'undefined') window.iScreenRecord = iScreenRecord;
+if(typeof vScreenRecord !== 'undefined') window.vScreenRecord = vScreenRecord;
+if(typeof qScreenRecord !== 'undefined') window.qScreenRecord = qScreenRecord;
+if(typeof openSpModal !== 'undefined') window.openSpModal = openSpModal;
+if(typeof closeSpModal !== 'undefined') window.closeSpModal = closeSpModal;
+if(typeof spParse !== 'undefined') window.spParse = spParse;
+if(typeof spSaveKey !== 'undefined') window.spSaveKey = spSaveKey;
+if(typeof spClearKey !== 'undefined') window.spClearKey = spClearKey;
+if(typeof closeSaveOverlay !== 'undefined') window.closeSaveOverlay = closeSaveOverlay;
+if(typeof closeVideoOverlay !== 'undefined') window.closeVideoOverlay = closeVideoOverlay;
+if(typeof shareVideo !== 'undefined') window.shareVideo = shareVideo;
+if(typeof cancelSrOverlay !== 'undefined') window.cancelSrOverlay = cancelSrOverlay;
+if(typeof closeSrOverlay !== 'undefined') window.closeSrOverlay = closeSrOverlay;
+if(typeof enterFullscreen !== 'undefined') window.enterFullscreen = enterFullscreen;
+if(typeof exitFullscreen !== 'undefined') window.exitFullscreen = exitFullscreen;
+if(typeof DYK !== 'undefined') window.DYK = DYK;
+if(typeof QC !== 'undefined') window.QC = QC;
+if(typeof SHLOKA !== 'undefined') window.SHLOKA = SHLOKA;
+if(typeof COMPARE !== 'undefined') window.COMPARE = COMPARE;
+if(typeof PARADOX !== 'undefined') window.PARADOX = PARADOX;
+if(typeof POLL !== 'undefined') window.POLL = POLL;
+if(typeof HOOK !== 'undefined') window.HOOK = HOOK;
+if(typeof CAPTION !== 'undefined') window.CAPTION = CAPTION;
+if(typeof WP !== 'undefined') window.WP = WP;
+if(typeof init !== 'undefined') window.init = init;
+
+})();</script>
 </body>
 </html>
